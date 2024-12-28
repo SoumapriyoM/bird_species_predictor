@@ -212,7 +212,7 @@ import librosa
 import matplotlib.cm as cm
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array, array_to_img
-import time
+from PIL import Image
 
 # Array of bird species labels
 class_labels = np.array(['aldfly', 'amegfi', 'astfly', 'balori', 'bewwre', 'bkhgro',
@@ -229,117 +229,89 @@ class_labels = np.array(['aldfly', 'amegfi', 'astfly', 'balori', 'bewwre', 'bkhg
 def process_audio_as_rgb(audio_file):
     audio_data, sample_rate = librosa.load(audio_file, duration=10)  # Load 10 seconds of audio
     mel_spec = librosa.feature.melspectrogram(y=audio_data, sr=sample_rate)
-    mel_spec = librosa.power_to_db(mel_spec, ref=np.max)  # Convert to dB scale
+    mel_spec = librosa.power_to_db(mel_spec, ref=np.max)
     mel_spec -= mel_spec.min()
     mel_spec /= mel_spec.max()
-    colormap = cm.get_cmap('viridis')  # Apply colormap
-    mel_spec_rgb = colormap(mel_spec)[..., :3] * 255  # Convert to RGB
+    colormap = cm.get_cmap('viridis')
+    mel_spec_rgb = colormap(mel_spec)[..., :3] * 255
     return mel_spec_rgb.astype(np.uint8)
 
 # Load the pre-trained model
-model = load_model('my_model.h5')  # Replace with the actual path to your model
+model = load_model('my_model.h5')
 
-# Custom CSS for beautiful design
+# CSS Styling
 st.markdown("""
     <style>
         body {
-            background: linear-gradient(to right, #6a11cb, #2575fc);
+            background-color: #f7f9fc;
+            color: #2c3e50;
+        }
+        .stButton>button {
+            background-color: #2ecc71;
             color: white;
-            font-family: 'Arial', sans-serif;
-        }
-        .main-container {
-            background: white;
-            border-radius: 15px;
-            padding: 2rem;
-            margin-top: 2rem;
-            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
-        }
-        h1 {
-            font-size: 3rem;
-            text-align: center;
-            color: #6a11cb;
-            text-shadow: 2px 2px #2575fc;
-        }
-        .step-header {
-            font-size: 1.5rem;
-            color: #6a11cb;
-            font-weight: bold;
-            margin-top: 1rem;
-            text-align: center;
-        }
-        .btn-custom {
-            background-color: #6a11cb;
-            color: white;
-            padding: 10px 20px;
             border-radius: 10px;
+            height: 50px;
+            width: 150px;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        .main-title {
+            font-size: 36px;
+            font-weight: bold;
             text-align: center;
-            font-size: 1rem;
-            margin-top: 1rem;
-            cursor: pointer;
+            color: #34495e;
         }
-        .btn-custom:hover {
-            background-color: #2575fc;
-            transition: 0.3s;
+        .sub-title {
+            font-size: 18px;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #7f8c8d;
         }
-        .spectrogram {
+        .spectrogram-container {
+            text-align: center;
+            margin: 20px auto;
+        }
+        .spectrogram-image {
             border-radius: 10px;
             box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.15);
-            margin-top: 1rem;
-        }
-        .prediction-box {
-            background-color: #6a11cb;
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            font-size: 1.5rem;
-            margin-top: 1rem;
         }
     </style>
 """, unsafe_allow_html=True)
 
-# Main Container
-st.markdown('<div class="main-container">', unsafe_allow_html=True)
+# Main Title
+st.markdown('<h1 class="main-title">Bird Species Prediction</h1>', unsafe_allow_html=True)
+st.markdown('<p class="sub-title">Upload an audio file and discover the bird species in the recording!</p>', unsafe_allow_html=True)
 
-# Title Section
-st.markdown('<h1>🐦 Bird Species Audio Classifier</h1>', unsafe_allow_html=True)
+# File uploader
+audio_file = st.file_uploader("Choose an audio file (ogg, mp3, wav)", type=["ogg", "mp3", "wav"])
 
-# Step 1: Upload Audio
-st.markdown('<div class="step-header">Step 1: Upload an Audio File</div>', unsafe_allow_html=True)
-audio_file = st.file_uploader("", type=["ogg", "mp3", "wav"])
+# Process the uploaded file
+if audio_file is not None:
+    st.write(f"File uploaded: {audio_file.name}")
+    st.audio(audio_file.getvalue(), format="audio/wav")
+    
+    processed_audio = process_audio_as_rgb(audio_file)
+    
+    # Display the mel spectrogram
+    st.markdown('<div class="spectrogram-container">', unsafe_allow_html=True)
+    st.image(processed_audio, caption="🎶 Mel Spectrogram", use_column_width=True, output_format="PNG")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-if audio_file:
-    st.write(f"**Uploaded File:** `{audio_file.name}`")
-    st.audio(audio_file, format="audio/wav")
-
-    # Process the audio
-    st.markdown('<div class="step-header">Step 2: Generating Mel Spectrogram...</div>', unsafe_allow_html=True)
-    with st.spinner('Processing your audio...'):
-        processed_audio = process_audio_as_rgb(audio_file)
-        time.sleep(2)  # Simulate processing time
-    st.image(processed_audio, caption="🎶 Mel Spectrogram", use_column_width=True, output_format="PNG", class_="spectrogram")
-
-    # Ensure correct shape for model input
+    # Ensure the shape matches the expected input shape (128, 431, 3)
     expected_shape = (128, 431, 3)
     if processed_audio.shape != expected_shape:
-        processed_audio = img_to_array(array_to_img(processed_audio).resize((431, 128)))
+        audio_data_img = array_to_img(processed_audio)
+        audio_data_img = audio_data_img.resize((431, 128))  # Resize to match input
+        processed_audio = img_to_array(audio_data_img)
+
     processed_audio = np.expand_dims(processed_audio, axis=0).astype(np.float32)
 
-    # Step 3: Predict Bird Species
-    st.markdown('<div class="step-header">Step 3: Predicting Bird Species...</div>', unsafe_allow_html=True)
-    with st.spinner('Analyzing the audio...'):
+    with st.spinner('Analyzing audio...'):
         try:
             prediction = model.predict(processed_audio)
             pred_label = np.argmax(prediction, axis=1)
-            time.sleep(2)  # Simulate prediction time
-            st.markdown(f'<div class="prediction-box">Predicted Bird Species: 🐦 <strong>{class_labels[pred_label[0]]}</strong></div>', unsafe_allow_html=True)
+            st.success(f"Predicted bird species: **{class_labels[pred_label[0]]}**")
         except Exception as e:
-            st.error(f"An error occurred during prediction: {e}")
+            st.error(f"Prediction error: {e}")
 else:
-    st.info("Please upload an audio file to proceed.")
-
-# End of Main Container
-st.markdown('</div>', unsafe_allow_html=True)
-
-
-
+    st.info("Please upload an audio file to start.")
