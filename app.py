@@ -211,11 +211,15 @@ import streamlit as st
 import numpy as np
 import librosa
 import matplotlib.cm as cm
+import plotly.express as px
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array, array_to_img
 from PIL import Image
+import io
+import time
+import pandas as pd
 
-# Array of bird species labels
+# Bird species labels
 class_labels = np.array(['aldfly', 'amegfi', 'astfly', 'balori', 'bewwre', 'bkhgro',
                          'bkpwar', 'blugrb1', 'brdowl', 'brespa', 'brnthr', 'buhvir',
                          'bulori', 'cangoo', 'canwar', 'canwre', 'carwre', 'comrav',
@@ -226,123 +230,112 @@ class_labels = np.array(['aldfly', 'amegfi', 'astfly', 'balori', 'bewwre', 'bkhg
                          'vesspa', 'warvir', 'wesmea', 'westan', 'wewpew', 'whbnut',
                          'woothr', 'yebfly'])
 
-# Function to process audio file as RGB mel spectrogram
+# Load the pre-trained model (ensure path is correct)
+model_path = "my_model.h5"
+model = load_model(model_path)
+
+# Function to process audio
 def process_audio_as_rgb(audio_file):
     audio_data, sample_rate = librosa.load(audio_file, duration=10)
     mel_spec = librosa.feature.melspectrogram(y=audio_data, sr=sample_rate)
     mel_spec = librosa.power_to_db(mel_spec, ref=np.max)
     mel_spec -= mel_spec.min()
     mel_spec /= mel_spec.max()
-    colormap = cm.get_cmap('plasma')  # A more vibrant colormap
+    colormap = cm.get_cmap('viridis')
     mel_spec_rgb = colormap(mel_spec)[..., :3] * 255
     return mel_spec_rgb.astype(np.uint8)
 
-# Load the pre-trained model
-model = load_model('my_model.h5')
+# Function to simulate dynamic progress
+def simulate_progress(stage, total_stages=4):
+    with st.spinner(f"{stage}..."):
+        for i in range(100):
+            time.sleep(0.01)  # Simulate processing time
+            st.progress((i + 1) / total_stages)
 
-# Apply custom CSS for a professional look
+# CSS for styling
 st.markdown("""
     <style>
         body {
-            background-color: #f4f8fc;
+            background-color: #ecf0f1;
+            color: #2c3e50;
+            font-family: 'Arial', sans-serif;
         }
-        .main {
-            background: #ffffff;
-            padding: 2rem;
-            border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            max-width: 900px;
-            margin: auto;
-        }
-        .title {
-            font-family: 'Arial Black', sans-serif;
-            font-size: 3rem;
-            color: #0073e6;
-            text-align: center;
-            margin-bottom: 1rem;
-        }
-        .instructions {
-            font-family: 'Roboto', sans-serif;
-            font-size: 1.2rem;
-            background: #e3f2fd;
-            border-left: 5px solid #0073e6;
-            padding: 1rem;
-            border-radius: 10px;
-        }
-        .upload-section {
-            margin-top: 20px;
-            text-align: center;
-        }
-        .prediction {
-            font-size: 1.8rem;
-            color: #2e7d32;
+        .main-title {
+            font-size: 40px;
             font-weight: bold;
             text-align: center;
-            margin-top: 2rem;
+            color: #3498db;
         }
-        .footer {
-            margin-top: 2rem;
+        .sub-title {
+            font-size: 18px;
             text-align: center;
-            color: #666666;
+            color: #7f8c8d;
+            margin-bottom: 20px;
         }
-        .footer a {
-            color: #0073e6;
-            text-decoration: none;
+        .stButton>button {
+            background-color: #3498db;
+            color: white;
+            font-size: 16px;
+            border-radius: 5px;
+            padding: 10px 20px;
+        }
+        .stProgress>div {
+            background-color: #3498db;
+        }
+        .upload-container {
+            margin-bottom: 30px;
+        }
+        .prediction-result {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #27ae60;
         }
     </style>
 """, unsafe_allow_html=True)
 
-# Title Section
-st.markdown('<div class="main"><h1 class="title">🐦 Bird Species Prediction</h1>', unsafe_allow_html=True)
+# Main title and instructions
+st.markdown('<h1 class="main-title">Dynamic Bird Species Predictor</h1>', unsafe_allow_html=True)
+st.markdown('<p class="sub-title">Upload an audio file to identify the bird species in the recording.</p>', unsafe_allow_html=True)
 
-# Instructions Section
-st.markdown("""
-<div class="instructions">
-    <p>Identify bird species from their calls! To get started:</p>
-    <ol>
-        <li>Upload an audio file of a bird's call (up to 10 seconds).</li>
-        <li>Visualize the Mel spectrogram representation.</li>
-        <li>Get the bird species prediction instantly!</li>
-    </ol>
-</div>
-""", unsafe_allow_html=True)
+# Sidebar options
+st.sidebar.title("App Settings")
+show_spectrogram = st.sidebar.checkbox("Show Spectrogram", value=True)
+show_predictions = st.sidebar.checkbox("Show Predictions", value=True)
 
-# File uploader widget
-st.markdown('<div class="upload-section">', unsafe_allow_html=True)
-audio_file = st.file_uploader("🎵 Upload an audio file (supported formats: ogg, mp3, wav):", type=["ogg", "mp3", "wav"])
-st.markdown('</div>', unsafe_allow_html=True)
+# Upload audio file
+audio_file = st.file_uploader("Upload an audio file (ogg, mp3, wav)", type=["ogg", "mp3", "wav"])
 
-# File Processing Section
 if audio_file:
-    st.write(f"**File uploaded:** `{audio_file.name}`")
-    st.audio(audio_file, format="audio/wav")
-    
-    # Process the audio file
-    processed_audio = process_audio_as_rgb(audio_file)
-    st.image(processed_audio, caption="🎶 Mel Spectrogram", use_column_width=True)
-    
-    # Resize to match the model's expected input shape
-    expected_shape = (128, 431, 3)
-    if processed_audio.shape != expected_shape:
-        processed_audio = img_to_array(array_to_img(processed_audio).resize((431, 128)))
-    processed_audio = np.expand_dims(processed_audio, axis=0).astype(np.float32)
-    
-    # Predict with the model
-    with st.spinner('🔄 Analyzing audio...'):
-        try:
-            prediction = model.predict(processed_audio)
-            pred_label = np.argmax(prediction, axis=1)
-            st.markdown(f'<p class="prediction">Predicted Bird Species: {class_labels[pred_label[0]]}</p>', unsafe_allow_html=True)
-        except Exception as e:
-            st.error(f"An error occurred during prediction: {e}")
+    st.success(f"File successfully uploaded: **{audio_file.name}**")
+    st.audio(audio_file.getvalue(), format="audio/wav")
+
+    # Processing audio
+    simulate_progress("Processing audio")
+    mel_spectrogram = process_audio_as_rgb(audio_file)
+
+    # Spectrogram display
+    if show_spectrogram:
+        st.image(mel_spectrogram, caption="🎶 Mel Spectrogram", use_column_width=True)
+
+    # Prediction
+    simulate_progress("Making predictions")
+    processed_image = img_to_array(array_to_img(mel_spectrogram).resize((431, 128)))
+    processed_image = np.expand_dims(processed_image, axis=0).astype(np.float32)
+
+    try:
+        predictions = model.predict(processed_image)
+        pred_label = np.argmax(predictions, axis=1)
+        if show_predictions:
+            st.success(f"Predicted bird species: **{class_labels[pred_label[0]]}**")
+            st.balloons()
+
+            # Display dynamic predictions (Using Plotly for better interactivity)
+            pred_df = pd.DataFrame(predictions[0], columns=["Probability"], index=class_labels)
+            fig = px.bar(pred_df, x=pred_df.index, y="Probability", title="Prediction Probabilities", labels={'x': 'Bird Species', 'y': 'Probability'})
+            st.plotly_chart(fig)
+
+    except Exception as e:
+        st.error(f"Prediction failed: {e}")
 else:
-    st.warning("⚠️ Please upload an audio file to proceed.")
-
-# Footer Section
-st.markdown("""
-<div class="footer">
-    <p>Powered by <a href="https://streamlit.io/" target="_blank">Streamlit</a> | Designed with 💙 by Bird Call Enthusiasts</p>
-</div>
-""", unsafe_allow_html=True)
-st.markdown('</div>', unsafe_allow_html=True)
-
+    st.info("Please upload an audio file to get started.")
