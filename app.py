@@ -247,10 +247,12 @@ def process_audio_as_rgb(audio_file):
 
 # Function to simulate dynamic progress
 def simulate_progress(stage, total_stages=4):
-    with st.spinner(f"{stage}..."):
-        for i in range(100):
-            time.sleep(0.01)  # Simulate processing time
-            st.progress((i + 1) / total_stages)
+    progress_bar = st.progress(0)  # Initialize the progress bar
+    for i in range(total_stages):
+        time.sleep(0.5)  # Simulate processing time for each stage
+        progress_bar.progress((i + 1) / total_stages)  # Update progress bar
+        st.text(f"{stage}... {int(((i + 1) / total_stages) * 100)}%")  # Show text to indicate progress
+    time.sleep(0.5)  # Final wait time to simulate completion
 
 # CSS for styling
 st.markdown("""
