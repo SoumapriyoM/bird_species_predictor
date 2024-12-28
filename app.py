@@ -313,7 +313,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Title Section
-st.markdown('<div class="main"><h1 class="title">🐦 Bird Species Prediction</h1>', unsafe_allow_html=True)
+st.markdown('<div class="main"><h1 class="title">🐦 Bird Species Classification</h1>', unsafe_allow_html=True)
 
 # Instructions Section
 st.markdown("""
