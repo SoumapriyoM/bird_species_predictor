@@ -212,7 +212,6 @@ import librosa
 import matplotlib.cm as cm
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array, array_to_img
-from PIL import Image
 import time
 
 # Array of bird species labels
@@ -240,84 +239,85 @@ def process_audio_as_rgb(audio_file):
 # Load the pre-trained model
 model = load_model('my_model.h5')  # Replace with the actual path to your model
 
-# Apply custom CSS for a more beautiful interface
+# Custom CSS for beautiful design
 st.markdown("""
     <style>
         body {
-            background: linear-gradient(120deg, #89f7fe, #66a6ff);
+            background: linear-gradient(to right, #6a11cb, #2575fc);
             color: white;
+            font-family: 'Arial', sans-serif;
         }
-        .main {
-            background: rgba(255, 255, 255, 0.8);
-            padding: 1rem;
+        .main-container {
+            background: white;
             border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+            padding: 2rem;
+            margin-top: 2rem;
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
         }
-        .title {
-            font-family: 'Arial Black', sans-serif;
+        h1 {
             font-size: 3rem;
-            color: #1c1c1c;
-            text-shadow: 2px 2px #66a6ff;
+            text-align: center;
+            color: #6a11cb;
+            text-shadow: 2px 2px #2575fc;
+        }
+        .step-header {
+            font-size: 1.5rem;
+            color: #6a11cb;
+            font-weight: bold;
+            margin-top: 1rem;
             text-align: center;
         }
-        .instructions {
-            font-family: 'Verdana', sans-serif;
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
-        }
-        .btn-upload {
-            font-family: 'Verdana', sans-serif;
-            font-size: 1rem;
-            padding: 10px 20px;
-            background: #66a6ff;
+        .btn-custom {
+            background-color: #6a11cb;
             color: white;
-            border-radius: 20px;
-            text-transform: uppercase;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+            padding: 10px 20px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1rem;
+            margin-top: 1rem;
+            cursor: pointer;
         }
-        .btn-upload:hover {
-            background: #1c1c1c;
-            color: #66a6ff;
+        .btn-custom:hover {
+            background-color: #2575fc;
             transition: 0.3s;
         }
-        .prediction {
-            font-size: 2rem;
-            color: #1c1c1c;
-            font-weight: bold;
-            text-align: center;
-        }
         .spectrogram {
-            border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.15);
+            margin-top: 1rem;
+        }
+        .prediction-box {
+            background-color: #6a11cb;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.5rem;
+            margin-top: 1rem;
         }
     </style>
 """, unsafe_allow_html=True)
 
+# Main Container
+st.markdown('<div class="main-container">', unsafe_allow_html=True)
+
 # Title Section
-st.markdown('<h1 class="title">🐦 Bird Species Audio Classifier</h1>', unsafe_allow_html=True)
+st.markdown('<h1>🐦 Bird Species Audio Classifier</h1>', unsafe_allow_html=True)
 
-# Sidebar Navigation
-st.sidebar.title("Navigation")
-st.sidebar.markdown("Use this sidebar to explore the app:")
-st.sidebar.markdown("- **Upload Audio**: Upload your audio file.")
-st.sidebar.markdown("- **View Spectrogram**: See the processed spectrogram.")
-st.sidebar.markdown("- **Prediction**: View the bird species prediction.")
-
-# File Uploader Section
-st.markdown('<p class="instructions">🎵 Upload an audio file (ogg, mp3, wav) below to get started.</p>', unsafe_allow_html=True)
+# Step 1: Upload Audio
+st.markdown('<div class="step-header">Step 1: Upload an Audio File</div>', unsafe_allow_html=True)
 audio_file = st.file_uploader("", type=["ogg", "mp3", "wav"])
 
 if audio_file:
     st.write(f"**Uploaded File:** `{audio_file.name}`")
     st.audio(audio_file, format="audio/wav")
-    
+
     # Process the audio
-    with st.spinner('🔄 Generating Mel Spectrogram...'):
+    st.markdown('<div class="step-header">Step 2: Generating Mel Spectrogram...</div>', unsafe_allow_html=True)
+    with st.spinner('Processing your audio...'):
         processed_audio = process_audio_as_rgb(audio_file)
         time.sleep(2)  # Simulate processing time
-
-    # Display the spectrogram
-    st.image(processed_audio, caption="🎶 Mel Spectrogram", use_column_width=True, output_format="PNG")
+    st.image(processed_audio, caption="🎶 Mel Spectrogram", use_column_width=True, output_format="PNG", class_="spectrogram")
 
     # Ensure correct shape for model input
     expected_shape = (128, 431, 3)
@@ -325,17 +325,21 @@ if audio_file:
         processed_audio = img_to_array(array_to_img(processed_audio).resize((431, 128)))
     processed_audio = np.expand_dims(processed_audio, axis=0).astype(np.float32)
 
-    # Predict Bird Species
-    with st.spinner('🔍 Analyzing audio for bird species...'):
+    # Step 3: Predict Bird Species
+    st.markdown('<div class="step-header">Step 3: Predicting Bird Species...</div>', unsafe_allow_html=True)
+    with st.spinner('Analyzing the audio...'):
         try:
             prediction = model.predict(processed_audio)
             pred_label = np.argmax(prediction, axis=1)
             time.sleep(2)  # Simulate prediction time
-            st.markdown(f'<p class="prediction">Predicted Bird Species: 🐦 <strong>{class_labels[pred_label[0]]}</strong></p>', unsafe_allow_html=True)
+            st.markdown(f'<div class="prediction-box">Predicted Bird Species: 🐦 <strong>{class_labels[pred_label[0]]}</strong></div>', unsafe_allow_html=True)
         except Exception as e:
             st.error(f"An error occurred during prediction: {e}")
 else:
-    st.markdown('<p class="instructions" style="text-align: center;">Please upload an audio file to proceed.</p>', unsafe_allow_html=True)
+    st.info("Please upload an audio file to proceed.")
+
+# End of Main Container
+st.markdown('</div>', unsafe_allow_html=True)
 
 
 
