@@ -4,3 +4,4 @@ matplotlib
 tensorflow
 pillow
 numpy
+plotly
