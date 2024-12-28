@@ -303,6 +303,12 @@ st.markdown("""
         .button:hover {
             background-color: #005bb5;
         }
+        .button:active {
+            background-color: #003f8c;
+        }
+        .loading-spinner {
+            margin-top: 20px;
+        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -346,7 +352,7 @@ if audio_file:
         processed_audio = img_to_array(array_to_img(processed_audio).resize((431, 128)))
     processed_audio = np.expand_dims(processed_audio, axis=0).astype(np.float32)
     
-    # Predict with the model
+    # Display loading spinner and make prediction
     with st.spinner('🔄 Analyzing audio...'):
         try:
             prediction = model.predict(processed_audio)
@@ -357,11 +363,16 @@ if audio_file:
 else:
     st.warning("⚠️ Please upload an audio file to proceed.")
 
-# Footer Section
+# Footer Section with social sharing options
 st.markdown("""
 <div class="footer">
     <p>Powered by <a href="https://streamlit.io/" target="_blank">Streamlit</a> | Designed with 💙 by Bird Call Enthusiasts</p>
+    <p>Share this app: 
+        <a href="https://twitter.com/intent/tweet?text=Check%20out%20this%20bird%20call%20prediction%20app!&url=https://example.com" target="_blank">Twitter</a> |
+        <a href="https://www.facebook.com/sharer/sharer.php?u=https://example.com" target="_blank">Facebook</a>
+    </p>
 </div>
 """, unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
+
 
