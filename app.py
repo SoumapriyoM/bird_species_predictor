@@ -212,9 +212,11 @@ import numpy as np
 import librosa
 import plotly.express as px
 import matplotlib.cm as cm
+import seaborn as sns
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array, array_to_img
 from PIL import Image
+import altair as alt
 
 # Array of bird species labels
 class_labels = np.array(['aldfly', 'amegfi', 'astfly', 'balori', 'bewwre', 'bkhgro',
@@ -234,7 +236,7 @@ def process_audio_as_rgb(audio_file):
     mel_spec = librosa.power_to_db(mel_spec, ref=np.max)
     mel_spec -= mel_spec.min()
     mel_spec /= mel_spec.max()
-    colormap = cm.get_cmap('plasma')  # A more vibrant colormap
+    colormap = cm.get_cmap('plasma')  # Vibrant colormap
     mel_spec_rgb = colormap(mel_spec)[..., :3] * 255
     return mel_spec_rgb.astype(np.uint8)
 
@@ -386,3 +388,4 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
+
