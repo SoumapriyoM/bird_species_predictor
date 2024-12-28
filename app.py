@@ -322,7 +322,7 @@ st.markdown("""
     <ol>
         <li>Upload an audio file of a bird's call (up to 10 seconds).</li>
         <li>Visualize the Mel spectrogram representation.</li>
-        <li>Get the bird species prediction instantly!</li>
+        <li>Get the bird species class instantly!</li>
     </ol>
 </div>
 """, unsafe_allow_html=True)
