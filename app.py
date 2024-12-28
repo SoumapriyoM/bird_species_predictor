@@ -210,6 +210,7 @@
 import streamlit as st
 import numpy as np
 import librosa
+import plotly.express as px
 import matplotlib.cm as cm
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array, array_to_img
@@ -240,14 +241,16 @@ def process_audio_as_rgb(audio_file):
 # Load the pre-trained model
 model = load_model('my_model.h5')
 
-# Apply custom CSS for a professional look
+# Apply custom CSS for a professional and vibrant look
 st.markdown("""
     <style>
         body {
-            background-color: #f4f8fc;
+            background: linear-gradient(to right, #00c6ff, #0072ff);  /* Gradient background */
+            font-family: 'Roboto', sans-serif;
+            color: #fff;
         }
         .main {
-            background: #ffffff;
+            background: rgba(255, 255, 255, 0.9);  /* Semi-transparent white */
             padding: 2rem;
             border-radius: 15px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
@@ -255,27 +258,29 @@ st.markdown("""
             margin: auto;
         }
         .title {
-            font-family: 'Arial Black', sans-serif;
-            font-size: 3rem;
-            color: #0073e6;
+            font-family: 'Poppins', sans-serif;
+            font-size: 3.5rem;
+            color: #0072ff;
             text-align: center;
             margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
         }
         .instructions {
             font-family: 'Roboto', sans-serif;
             font-size: 1.2rem;
-            background: #e3f2fd;
-            border-left: 5px solid #0073e6;
+            background: #ffffff;
+            border-left: 5px solid #00c6ff;
             padding: 1rem;
             border-radius: 10px;
+            color: #333;
         }
         .upload-section {
             margin-top: 20px;
             text-align: center;
         }
         .prediction {
-            font-size: 1.8rem;
-            color: #2e7d32;
+            font-size: 2rem;
+            color: #00c6ff;
             font-weight: bold;
             text-align: center;
             margin-top: 2rem;
@@ -283,11 +288,38 @@ st.markdown("""
         .footer {
             margin-top: 2rem;
             text-align: center;
-            color: #666666;
+            color: #ffffff;
+            font-size: 0.9rem;
         }
         .footer a {
-            color: #0073e6;
+            color: #00c6ff;
             text-decoration: none;
+            font-weight: bold;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        .button {
+            background-color: #00c6ff;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+        .button:hover {
+            background-color: #0072ff;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        .button:active {
+            background-color: #0056b3;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .loading-spinner {
+            margin-top: 20px;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -319,7 +351,12 @@ if audio_file:
     
     # Process the audio file
     processed_audio = process_audio_as_rgb(audio_file)
-    st.image(processed_audio, caption="🎶 Mel Spectrogram", use_column_width=True)
+    
+    # Use Plotly for an interactive Mel spectrogram
+    fig = px.imshow(processed_audio, color_continuous_scale='plasma', title="🎶 Mel Spectrogram")
+    fig.update_xaxes(title_text="Time")
+    fig.update_yaxes(title_text="Frequency")
+    st.plotly_chart(fig, use_container_width=True)
     
     # Resize to match the model's expected input shape
     expected_shape = (128, 431, 3)
@@ -327,7 +364,7 @@ if audio_file:
         processed_audio = img_to_array(array_to_img(processed_audio).resize((431, 128)))
     processed_audio = np.expand_dims(processed_audio, axis=0).astype(np.float32)
     
-    # Predict with the model
+    # Display loading spinner and make prediction
     with st.spinner('🔄 Analyzing audio...'):
         try:
             prediction = model.predict(processed_audio)
@@ -338,10 +375,14 @@ if audio_file:
 else:
     st.warning("⚠️ Please upload an audio file to proceed.")
 
-# Footer Section
+# Footer Section with social sharing options
 st.markdown("""
 <div class="footer">
     <p>Powered by <a href="https://streamlit.io/" target="_blank">Streamlit</a> | Designed with 💙 by Bird Call Enthusiasts</p>
+    <p>Share this app: 
+        <a href="https://twitter.com/intent/tweet?text=Check%20out%20this%20bird%20call%20prediction%20app!&url=https://example.com" target="_blank">Twitter</a> |
+        <a href="https://www.facebook.com/sharer/sharer.php?u=https://example.com" target="_blank">Facebook</a>
+    </p>
 </div>
 """, unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
