@@ -212,11 +212,9 @@ import numpy as np
 import librosa
 import plotly.express as px
 import matplotlib.cm as cm
-import seaborn as sns
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array, array_to_img
 from PIL import Image
-import altair as alt
 
 # Array of bird species labels
 class_labels = np.array(['aldfly', 'amegfi', 'astfly', 'balori', 'bewwre', 'bkhgro',
@@ -236,23 +234,22 @@ def process_audio_as_rgb(audio_file):
     mel_spec = librosa.power_to_db(mel_spec, ref=np.max)
     mel_spec -= mel_spec.min()
     mel_spec /= mel_spec.max()
-    colormap = cm.get_cmap('plasma')  # Vibrant colormap
+    colormap = cm.get_cmap('plasma')  # A more vibrant colormap
     mel_spec_rgb = colormap(mel_spec)[..., :3] * 255
     return mel_spec_rgb.astype(np.uint8)
 
 # Load the pre-trained model
 model = load_model('my_model.h5')
 
-# Apply custom CSS for a professional and vibrant look
+# Apply custom CSS for a professional look
 st.markdown("""
     <style>
         body {
-            background: linear-gradient(to right, #00c6ff, #0072ff);  /* Gradient background */
+            background-color: #f0f8ff;
             font-family: 'Roboto', sans-serif;
-            color: #fff;
         }
         .main {
-            background: rgba(255, 255, 255, 0.9);  /* Semi-transparent white */
+            background: #ffffff;
             padding: 2rem;
             border-radius: 15px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
@@ -261,20 +258,18 @@ st.markdown("""
         }
         .title {
             font-family: 'Poppins', sans-serif;
-            font-size: 3.5rem;
-            color: #0072ff;
+            font-size: 3rem;
+            color: #0073e6;
             text-align: center;
             margin-bottom: 1rem;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
         }
         .instructions {
             font-family: 'Roboto', sans-serif;
             font-size: 1.2rem;
-            background: #ffffff;
-            border-left: 5px solid #00c6ff;
+            background: #e3f2fd;
+            border-left: 5px solid #0073e6;
             padding: 1rem;
             border-radius: 10px;
-            color: #333;
         }
         .upload-section {
             margin-top: 20px;
@@ -282,7 +277,7 @@ st.markdown("""
         }
         .prediction {
             font-size: 2rem;
-            color: #00c6ff;
+            color: #2e7d32;
             font-weight: bold;
             text-align: center;
             margin-top: 2rem;
@@ -290,35 +285,26 @@ st.markdown("""
         .footer {
             margin-top: 2rem;
             text-align: center;
-            color: #ffffff;
-            font-size: 0.9rem;
+            color: #666666;
         }
         .footer a {
-            color: #00c6ff;
+            color: #0073e6;
             text-decoration: none;
-            font-weight: bold;
-        }
-        .footer a:hover {
-            text-decoration: underline;
         }
         .button {
-            background-color: #00c6ff;
+            background-color: #0073e6;
             color: white;
-            padding: 12px 24px;
+            padding: 10px 20px;
             border-radius: 8px;
-            font-weight: bold;
             text-transform: uppercase;
+            font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
         }
         .button:hover {
-            background-color: #0072ff;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            background-color: #005bb5;
         }
         .button:active {
-            background-color: #0056b3;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            background-color: #003f8c;
         }
         .loading-spinner {
             margin-top: 20px;
@@ -388,4 +374,5 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
+
 
