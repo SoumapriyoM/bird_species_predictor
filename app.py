@@ -207,6 +207,177 @@
 #     st.warning("⚠️ Please upload an audio file to proceed.")
 
 # #3
+# import streamlit as st
+# import numpy as np
+# import librosa
+# import plotly.express as px
+# import matplotlib.cm as cm
+# from tensorflow.keras.models import load_model
+# from tensorflow.keras.preprocessing.image import img_to_array, array_to_img
+# from PIL import Image
+
+# # Array of bird species labels
+# class_labels = np.array(['aldfly', 'amegfi', 'astfly', 'balori', 'bewwre', 'bkhgro',
+#                          'bkpwar', 'blugrb1', 'brdowl', 'brespa', 'brnthr', 'buhvir',
+#                          'brnowl', 'cangoo', 'canwar', 'canwre', 'carwre', 'comrav',
+#                          'daejun', 'eastow', 'eawpew', 'foxspa', 'gnttow', 'hamfly',
+#                          'herthr', 'hoowar', 'houfin', 'houspa', 'indbun', 'lesgol',
+#                          'louwat', 'magwar', 'marwre', 'norcar', 'normoc', 'olsfly',
+#                          'pasfly', 'reevir1', 'rewbla', 'scoori', 'spotow', 'swathr',
+#                          'vesspa', 'warvir', 'wesmea', 'westan', 'wewpew', 'whbnut',
+#                          'woothr', 'yebfly'])
+
+# # Function to process audio file as RGB mel spectrogram
+# def process_audio_as_rgb(audio_file):
+#     audio_data, sample_rate = librosa.load(audio_file, duration=10)
+#     mel_spec = librosa.feature.melspectrogram(y=audio_data, sr=sample_rate)
+#     mel_spec = librosa.power_to_db(mel_spec, ref=np.max)
+#     mel_spec -= mel_spec.min()
+#     mel_spec /= mel_spec.max()
+#     colormap = cm.get_cmap('plasma')  # A more vibrant colormap
+#     mel_spec_rgb = colormap(mel_spec)[..., :3] * 255
+#     return mel_spec_rgb.astype(np.uint8)
+
+# # Load the pre-trained model
+# model = load_model('my_model.h5')
+
+# # Apply custom CSS for a professional look
+# st.markdown("""
+#     <style>
+#         body {
+#             background-color: #f0f8ff;
+#             font-family: 'Roboto', sans-serif;
+#         }
+#         .main {
+#             background: #ffffff;
+#             padding: 2rem;
+#             border-radius: 15px;
+#             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+#             max-width: 900px;
+#             margin: auto;
+#         }
+#         .title {
+#             font-family: 'Poppins', sans-serif;
+#             font-size: 3rem;
+#             color: #0073e6;
+#             text-align: center;
+#             margin-bottom: 1rem;
+#         }
+#         .instructions {
+#             font-family: 'Roboto', sans-serif;
+#             font-size: 1.2rem;
+#             background: #e3f2fd;
+#             border-left: 5px solid #0073e6;
+#             padding: 1rem;
+#             border-radius: 10px;
+#         }
+#         .upload-section {
+#             margin-top: 20px;
+#             text-align: center;
+#         }
+#         .prediction {
+#             font-size: 2rem;
+#             color: #2e7d32;
+#             font-weight: bold;
+#             text-align: center;
+#             margin-top: 2rem;
+#         }
+#         .footer {
+#             margin-top: 2rem;
+#             text-align: center;
+#             color: #666666;
+#         }
+#         .footer a {
+#             color: #0073e6;
+#             text-decoration: none;
+#         }
+#         .button {
+#             background-color: #0073e6;
+#             color: white;
+#             padding: 10px 20px;
+#             border-radius: 8px;
+#             text-transform: uppercase;
+#             font-weight: bold;
+#             cursor: pointer;
+#         }
+#         .button:hover {
+#             background-color: #005bb5;
+#         }
+#         .button:active {
+#             background-color: #003f8c;
+#         }
+#         .loading-spinner {
+#             margin-top: 20px;
+#         }
+#     </style>
+# """, unsafe_allow_html=True)
+
+# # Title Section
+# st.markdown('<div class="main"><h1 class="title">🐦 Bird Species Classification</h1>', unsafe_allow_html=True)
+
+# # Instructions Section
+# st.markdown("""
+# <div class="instructions">
+#     <p>Identify bird species from their calls! To get started:</p>
+#     <ol>
+#         <li>Upload an audio file of a bird's call (up to 10 seconds).</li>
+#         <li>Visualize the Mel spectrogram representation.</li>
+#         <li>Get the bird species class instantly!</li>
+#     </ol>
+# </div>
+# """, unsafe_allow_html=True)
+
+# # File uploader widget
+# st.markdown('<div class="upload-section">', unsafe_allow_html=True)
+# audio_file = st.file_uploader("🎵 Upload an audio file (supported formats: ogg, mp3, wav):", type=["ogg", "mp3", "wav"])
+# st.markdown('</div>', unsafe_allow_html=True)
+
+# # File Processing Section
+# if audio_file:
+#     st.write(f"**File uploaded:** `{audio_file.name}`")
+#     st.audio(audio_file, format="audio/wav")
+    
+#     # Process the audio file
+#     processed_audio = process_audio_as_rgb(audio_file)
+    
+#     # Use Plotly for an interactive Mel spectrogram
+#     fig = px.imshow(processed_audio, color_continuous_scale='plasma', title="🎶 Mel Spectrogram")
+#     fig.update_xaxes(title_text="Time")
+#     fig.update_yaxes(title_text="Frequency")
+#     st.plotly_chart(fig, use_container_width=True)
+    
+#     # Resize to match the model's expected input shape
+#     expected_shape = (128, 431, 3)
+#     if processed_audio.shape != expected_shape:
+#         processed_audio = img_to_array(array_to_img(processed_audio).resize((431, 128)))
+#     processed_audio = np.expand_dims(processed_audio, axis=0).astype(np.float32)
+    
+#     # Display loading spinner and make prediction
+#     with st.spinner('🔄 Analyzing audio...'):
+#         try:
+#             prediction = model.predict(processed_audio)
+#             pred_label = np.argmax(prediction, axis=1)
+#             st.markdown(f'<p class="prediction">Predicted Bird Species: {class_labels[pred_label[0]]}</p>', unsafe_allow_html=True)
+#         except Exception as e:
+#             st.error(f"An error occurred during prediction: {e}")
+# else:
+#     st.warning("⚠️ Please upload an audio file to proceed.")
+
+# # Footer Section with social sharing options
+# st.markdown("""
+# <div class="footer">
+#     <p>Powered by <a href="https://streamlit.io/" target="_blank">Streamlit</a> | Designed with 💙 by Bird Call Enthusiasts</p>
+#     <p>Share this app: 
+#         <a href="https://twitter.com/intent/tweet?text=Check%20out%20this%20bird%20call%20prediction%20app!&url=https://example.com" target="_blank">Twitter</a> |
+#         <a href="https://www.facebook.com/sharer/sharer.php?u=https://example.com" target="_blank">Facebook</a>
+#     </p>
+# </div>
+# """, unsafe_allow_html=True)
+# st.markdown('</div>', unsafe_allow_html=True)
+
+Sure, I can help with that. To incorporate a check for audio duration and ensure that the uploaded audio file is at least 10 seconds long, you can use `librosa.get_duration()`. If the audio file is less than 10 seconds, it will display a warning message to the user. Here is the updated code with this functionality added:
+
+```python
 import streamlit as st
 import numpy as np
 import librosa
@@ -273,41 +444,41 @@ st.markdown("""
         }
         .upload-section {
             margin-top: 20px;
-            text-align: center;
+            text-align: center.
         }
         .prediction {
             font-size: 2rem;
             color: #2e7d32;
-            font-weight: bold;
-            text-align: center;
-            margin-top: 2rem;
+            font-weight: bold.
+            text-align: center.
+            margin-top: 2rem.
         }
         .footer {
-            margin-top: 2rem;
-            text-align: center;
-            color: #666666;
+            margin-top: 2rem.
+            text-align: center.
+            color: #666666.
         }
         .footer a {
-            color: #0073e6;
-            text-decoration: none;
+            color: #0073e6.
+            text-decoration: none.
         }
         .button {
-            background-color: #0073e6;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            text-transform: uppercase;
-            font-weight: bold;
-            cursor: pointer;
+            background-color: #0073e6.
+            color: white.
+            padding: 10px 20px.
+            border-radius: 8px.
+            text-transform: uppercase.
+            font-weight: bold.
+            cursor: pointer.
         }
         .button:hover {
-            background-color: #005bb5;
+            background-color: #005bb5.
         }
         .button:active {
-            background-color: #003f8c;
+            background-color: #003f8c.
         }
         .loading-spinner {
-            margin-top: 20px;
+            margin-top: 20px.
         }
     </style>
 """, unsafe_allow_html=True)
@@ -337,29 +508,34 @@ if audio_file:
     st.write(f"**File uploaded:** `{audio_file.name}`")
     st.audio(audio_file, format="audio/wav")
     
-    # Process the audio file
-    processed_audio = process_audio_as_rgb(audio_file)
-    
-    # Use Plotly for an interactive Mel spectrogram
-    fig = px.imshow(processed_audio, color_continuous_scale='plasma', title="🎶 Mel Spectrogram")
-    fig.update_xaxes(title_text="Time")
-    fig.update_yaxes(title_text="Frequency")
-    st.plotly_chart(fig, use_container_width=True)
-    
-    # Resize to match the model's expected input shape
-    expected_shape = (128, 431, 3)
-    if processed_audio.shape != expected_shape:
-        processed_audio = img_to_array(array_to_img(processed_audio).resize((431, 128)))
-    processed_audio = np.expand_dims(processed_audio, axis=0).astype(np.float32)
-    
-    # Display loading spinner and make prediction
-    with st.spinner('🔄 Analyzing audio...'):
-        try:
-            prediction = model.predict(processed_audio)
-            pred_label = np.argmax(prediction, axis=1)
-            st.markdown(f'<p class="prediction">Predicted Bird Species: {class_labels[pred_label[0]]}</p>', unsafe_allow_html=True)
-        except Exception as e:
-            st.error(f"An error occurred during prediction: {e}")
+    # Check the duration of the audio file
+    duration = librosa.get_duration(filename=audio_file)
+    if duration < 10:
+        st.warning("⚠️ Please upload an audio file that is at least 10 seconds long.")
+    else:
+        # Process the audio file
+        processed_audio = process_audio_as_rgb(audio_file)
+        
+        # Use Plotly for an interactive Mel spectrogram
+        fig = px.imshow(processed_audio, color_continuous_scale='plasma', title="🎶 Mel Spectrogram")
+        fig.update_xaxes(title_text="Time")
+        fig.update_yaxes(title_text="Frequency")
+        st.plotly_chart(fig, use_container_width=True)
+        
+        # Resize to match the model's expected input shape
+        expected_shape = (128, 431, 3)
+        if processed_audio.shape != expected_shape:
+            processed_audio = img_to_array(array_to_img(processed_audio).resize((431, 128)))
+        processed_audio = np.expand_dims(processed_audio, axis=0).astype(np.float32)
+        
+        # Display loading spinner and make prediction
+        with st.spinner('🔄 Analyzing audio...'):
+            try:
+                prediction = model.predict(processed_audio)
+                pred_label = np.argmax(prediction, axis=1)
+                st.markdown(f'<p class="prediction">Predicted Bird Species: {class_labels[pred_label[0]]}</p>', unsafe_allow_html=True)
+            except Exception as e:
+                st.error(f"An error occurred during prediction: {e}")
 else:
     st.warning("⚠️ Please upload an audio file to proceed.")
 
@@ -374,5 +550,5 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
-
+```
 
