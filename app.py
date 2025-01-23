@@ -375,9 +375,6 @@
 # """, unsafe_allow_html=True)
 # st.markdown('</div>', unsafe_allow_html=True)
 
-Sure, I can help with that. To incorporate a check for audio duration and ensure that the uploaded audio file is at least 10 seconds long, you can use `librosa.get_duration()`. If the audio file is less than 10 seconds, it will display a warning message to the user. Here is the updated code with this functionality added:
-
-```python
 import streamlit as st
 import numpy as np
 import librosa
