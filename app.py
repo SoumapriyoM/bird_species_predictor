@@ -219,7 +219,7 @@ from PIL import Image
 # Array of bird species labels
 class_labels = np.array(['aldfly', 'amegfi', 'astfly', 'balori', 'bewwre', 'bkhgro',
                          'bkpwar', 'blugrb1', 'brdowl', 'brespa', 'brnthr', 'buhvir',
-                         'bulori', 'cangoo', 'canwar', 'canwre', 'carwre', 'comrav',
+                         'brnowl', 'cangoo', 'canwar', 'canwre', 'carwre', 'comrav',
                          'daejun', 'eastow', 'eawpew', 'foxspa', 'gnttow', 'hamfly',
                          'herthr', 'hoowar', 'houfin', 'houspa', 'indbun', 'lesgol',
                          'louwat', 'magwar', 'marwre', 'norcar', 'normoc', 'olsfly',
